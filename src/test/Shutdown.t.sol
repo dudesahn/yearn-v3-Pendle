@@ -14,14 +14,12 @@ contract ShutdownTest is Setup {
         // Deposit into strategy
         mintAndDepositIntoStrategy(strategy, user, _amount);
 
-
         // Earn Interest
         skip(1 days);
 
         // Shutdown the strategy
         vm.prank(management);
         strategy.shutdownStrategy();
-
 
         // Make sure we can still withdraw the full amount
         uint256 balanceBefore = asset.balanceOf(user);
