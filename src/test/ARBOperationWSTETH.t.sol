@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import "forge-std/console.sol";
+import "forge-std/console2.sol";
 import {OperationTest} from "./Operation.t.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Setup} from "./utils/Setup.sol";
@@ -9,10 +9,18 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IStrategyInterface} from "../interfaces/IStrategyInterface.sol";
 
 contract ARBOperationWSTETHTest is OperationTest {
+    // add this to be excluded from coverage report 🚨🚨🚨 REMOVE BEFORE DEPLOYMENT LOL 🚨🚨🚨
+    function test_skip() public {}
     function setUp() public override {
-        //super.setUp();
-        uint256 arbitrumFork = vm.createFork("arbitrum");
-        vm.selectFork(arbitrumFork);
+        uint256 chainId = block.chainid;
+        if (chainId == uint256(1)) {
+            console2.log("chain is ethereum");
+            return;
+        }
+        //Arbitrum:
+        if (chainId == uint256(42161)) {
+            console2.log("chain is arbitrum");
+        }
         oracle = 0x1Fd95db7B7C0067De8D45C0cb35D59796adfD187;
         asset = ERC20(0x5979D7b546E38E414F7E9822514be443A4800529);
         //asset from https://docs.pendle.finance/Developers/Deployments/: Markets --> PT-wstETH-26JUN25/SY-wstETH Market --> asset
@@ -20,24 +28,27 @@ contract ARBOperationWSTETHTest is OperationTest {
         //redeemToken from asset --> readTokens --> SY --> getTokensIn --> redeemToken
         redeemToken = 0x5979D7b546E38E414F7E9822514be443A4800529; //wstETH
         feeRedeemTokenToBase = 100;
-        
+
         //chain specific:
         base = 0x5979D7b546E38E414F7E9822514be443A4800529;
 
-
         pendleStaking = 0x6DB96BBEB081d2a85E0954C252f2c1dC108b3f81; //https://docs.penpiexyz.io/smart-contracts --> Arbitrum --> PendleStaking
-        GOV = 0x6Ba1734209a53a6E63C39D4e36612cc856A34D56;  
-        
+        GOV = 0x6Ba1734209a53a6E63C39D4e36612cc856A34D56;
+
         // Set decimals
         decimals = asset.decimals();
         strategyFactory = setUpStrategyFactory();
         // Deploy strategy and set variables
         vm.prank(management);
-        strategy = IStrategyInterface(strategyFactory.newSingleSidedPTcore(address(asset), address(market), "Strategy"));
+        strategy = IStrategyInterface(
+            strategyFactory.newSingleSidedPTcore(
+                address(asset),
+                address(market),
+                "Strategy"
+            )
+        );
         setUpStrategy();
         factory = strategy.FACTORY();
-        
- 
 
         // label all the used addresses for traces
         vm.label(keeper, "keeper");

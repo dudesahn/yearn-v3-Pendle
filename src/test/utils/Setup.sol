@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.18;
 
-import "forge-std/console.sol";
+import "forge-std/console2.sol";
 import {ExtendedTest} from "./ExtendedTest.sol";
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -31,6 +31,8 @@ contract Setup is ExtendedTest, IEvents {
     address public oracle;
     address public chainlinkOracle;
     uint256 public chainlinkHeartbeat;
+
+    uint256 chainToTest = 1;
 
     uint256 maxSingleTrade = type(uint256).max;
 
@@ -77,37 +79,28 @@ contract Setup is ExtendedTest, IEvents {
     //uint256 public profitMaxUnlockTime = 10 days;
     uint256 public profitMaxUnlockTime = 10 days;
 
-    bytes32 public constant BASE_STRATEGY_STORAGE = bytes32(uint256(keccak256("yearn.base.strategy.storage")) - 1);
+    bytes32 public constant BASE_STRATEGY_STORAGE =
+        bytes32(uint256(keccak256("yearn.base.strategy.storage")) - 1);
 
     function setUp() public virtual {
-        uint256 mainnetFork = vm.createFork("mainnet");
-        uint256 arbitrumFork = vm.createFork("arbitrum");
-        //uint256 polygonFork = vm.createFork("polygon");
-        //uint256 optimismFork = vm.createFork("optimism");
-        
-
-        vm.selectFork(mainnetFork);
-        //vm.selectFork(arbitrumFork);
-        //vm.selectFork(polygonFork);
-        //vm.selectFork(optimismFork);
-
-        //Fork specific parameters:
-        //MAINNET:
-        if(vm.activeFork() == mainnetFork) {
+        uint256 chainId = block.chainid;
+        if (chainId == uint256(1)) {
+            console2.log("chain is ethereum");
             asset = ERC20(0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee); //WeETH
             market = ERC20(0xF32e58F92e60f4b0A37A69b95d642A471365EAe8); //eETH Pool 27 Jun 2024
             redeemToken = 0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee; //weETH
             feeRedeemTokenToBase = 500;
             base = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; //WETH
             feeBaseToAsset = 100;
-            
+
             oracle = 0x66a1096C6366b2529274dF4f5D8247827fe4CEA8;
             GOV = 0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52;
             //chainlinkOracle = 0x5c9C449BbC9a6075A2c061dF312a35fd1E05fF22; //weETH/ETH //not necessary since WETH is valid depositToken
             chainlinkHeartbeat = 1e30;
         }
         //Arbitrum:
-        if(vm.activeFork() == arbitrumFork) {
+        if (chainId == uint256(42161)) {
+            console2.log("chain is arbitrum");
             asset = ERC20(0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe); //WETH
             market = ERC20(0x952083cde7aaa11AB8449057F7de23A970AA8472); //eETH Pool 27 Jun 2024
             redeemToken = 0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe; //weETH
@@ -120,18 +113,24 @@ contract Setup is ExtendedTest, IEvents {
             chainlinkOracle = 0xE141425bc1594b8039De6390db1cDaf4397EA22b; //weETH/ETH
             chainlinkHeartbeat = 1e30;
         }
-        
+
         // Set decimals
         decimals = asset.decimals();
         strategyFactory = setUpStrategyFactory();
 
         // Deploy strategy and set variables
         vm.prank(management);
-        strategy = IStrategyInterface(strategyFactory.newSingleSidedPTcore(address(asset), address(market), "Strategy"));
+        strategy = IStrategyInterface(
+            strategyFactory.newSingleSidedPTcore(
+                address(asset),
+                address(market),
+                "Strategy"
+            )
+        );
         setUpStrategy();
 
         factory = strategy.FACTORY();
-        
+
         // label all the used addresses for traces
         vm.label(keeper, "keeper");
         vm.label(factory, "factory");
@@ -221,9 +220,19 @@ contract Setup is ExtendedTest, IEvents {
     }
 
     function checkStrategyInvariants(IStrategyInterface _strategy) public {
-        (address SY, /*address PT*/, address YT) = IPendleMarket(address(market)).readTokens();
-        assertLe(ERC20(SY).balanceOf(address(_strategy)), 10, "SY balance > DUST");
-        assertLe(ERC20(YT).balanceOf(address(_strategy)), 10, "YT balance > DUST");
+        (address SY /*address PT*/, , address YT) = IPendleMarket(
+            address(market)
+        ).readTokens();
+        assertLe(
+            ERC20(SY).balanceOf(address(_strategy)),
+            10,
+            "SY balance > DUST"
+        );
+        assertLe(
+            ERC20(YT).balanceOf(address(_strategy)),
+            10,
+            "YT balance > DUST"
+        );
     }
 
     function airdrop(ERC20 _asset, address _to, uint256 _amount) public {
@@ -245,7 +254,6 @@ contract Setup is ExtendedTest, IEvents {
         strategy.setPerformanceFee(_performanceFee);
         vm.stopPrank();
     }
-
 
     // For easier calculations we may want to set the performance fee
     // to 0 in some tests which is underneath the minimum. So we do it manually.
@@ -294,4 +302,6 @@ contract Setup is ExtendedTest, IEvents {
             S.slot := slot
         }
     }
+    // add this to be excluded from coverage report 🚨🚨🚨 REMOVE BEFORE DEPLOYMENT LOL 🚨🚨🚨
+    function test_skip_one() public {}
 }

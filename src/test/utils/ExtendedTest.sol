@@ -83,4 +83,6 @@ contract ExtendedTest is Test {
             }
         }
     }
+    // add this to be excluded from coverage report 🚨🚨🚨 REMOVE BEFORE DEPLOYMENT LOL 🚨🚨🚨
+    function test_skip_two() public {}
 }

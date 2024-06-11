@@ -11,7 +11,7 @@ contract SingleSidedPTcoreFactory {
     address public performanceFeeRecipient;
     address public keeper;
 
-    address public  immutable oracle;
+    address public immutable oracle;
     address public immutable emergencyAdmin;
     address public immutable GOV;
 
@@ -20,7 +20,7 @@ contract SingleSidedPTcoreFactory {
     constructor(
         address _management,
         address _peformanceFeeRecipient,
-        address _keeper, 
+        address _keeper,
         address _oracle,
         address _emergencyAdmin,
         address _GOV
@@ -42,9 +42,14 @@ contract SingleSidedPTcoreFactory {
      * @notice Deploy a new Single Sided Pendle PT Core Strategy.
      * @return . The address of the new strategy.
      */
-    function newSingleSidedPTcore(address _asset, address _market, string memory _name) external onlyManagement returns (address) {
-
-        IStrategyInterface newStrategy = IStrategyInterface(address(new SingleSidedPTcore(_asset, _market, oracle, GOV, _name)));
+    function newSingleSidedPTcore(
+        address _asset,
+        address _market,
+        string memory _name
+    ) external onlyManagement returns (address) {
+        IStrategyInterface newStrategy = IStrategyInterface(
+            address(new SingleSidedPTcore(_asset, _market, oracle, GOV, _name))
+        );
 
         newStrategy.setPerformanceFeeRecipient(performanceFeeRecipient);
 
@@ -65,9 +70,18 @@ contract SingleSidedPTcoreFactory {
      * @notice Deploy a new Single Sided Pendle PT Strategy.
      * @return . The address of the new strategy.
      */
-    function newSingleSidedPTcore(address _asset, address _market, uint256 _maxSingleTrade, uint256 _maxSingleWithdraw, uint256 _depositLimit, uint256 _depositTrigger, string memory _name) external onlyManagement returns (address) {
-
-        IStrategyInterface newStrategy = IStrategyInterface(address(new SingleSidedPTcore(_asset, _market, oracle, GOV, _name)));
+    function newSingleSidedPTcore(
+        address _asset,
+        address _market,
+        uint256 _maxSingleTrade,
+        uint256 _maxSingleWithdraw,
+        uint256 _depositLimit,
+        uint256 _depositTrigger,
+        string memory _name
+    ) external onlyManagement returns (address) {
+        IStrategyInterface newStrategy = IStrategyInterface(
+            address(new SingleSidedPTcore(_asset, _market, oracle, GOV, _name))
+        );
 
         newStrategy.setPerformanceFeeRecipient(performanceFeeRecipient);
 
@@ -84,7 +98,7 @@ contract SingleSidedPTcoreFactory {
         if (_depositLimit != type(uint256).max) {
             newStrategy.setDepositLimit(_depositLimit);
         }
-        
+
         newStrategy.setDepositTrigger(_depositTrigger);
 
         emit NewSingleSidedPTcore(address(newStrategy), _asset);
@@ -99,7 +113,9 @@ contract SingleSidedPTcoreFactory {
      * @param _market market address
      * @return strategy address
      */
-    function getStrategyByMarket(address _market) external view returns (address) {
+    function getStrategyByMarket(
+        address _market
+    ) external view returns (address) {
         return marketToStrategy[_market];
     }
 
@@ -107,12 +123,17 @@ contract SingleSidedPTcoreFactory {
      * @notice Check if a strategy has been deployed by this Factory
      * @param _strategy strategy address
      */
-    function isDeployedStrategy(address _strategy) external view returns (bool) {
+    function isDeployedStrategy(
+        address _strategy
+    ) external view returns (bool) {
         address _market = IStrategyInterface(_strategy).market();
         return marketToStrategy[_market] == _strategy;
     }
 
-    function setStrategyByMarket(address _market, address _strategy) external onlyManagement {
+    function setStrategyByMarket(
+        address _market,
+        address _strategy
+    ) external onlyManagement {
         marketToStrategy[_market] = _strategy;
     }
 
