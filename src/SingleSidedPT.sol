@@ -95,7 +95,12 @@ contract SingleSidedPTcore is BaseHealthCheck {
 
         // Default slippage to 1%.
         swapSlippageBPS = 100;
-        bufferSlippageBPS = 50; //@comment is there a reason why this is only 50, but we're expecting a max of 100 bps on swaps? shouldn't this really be the other way around?
+        
+        //@comment is there a reason why this is only 50, but we're expecting a max of 100 bps on swaps? shouldn't this really be the other way around?
+        //@comment in general this feels a bit optimistic, especially since we have operated for a long, long time w/ stETH around 1%, which likely has much deeper liquidity and 
+        // peg than these assets
+        bufferSlippageBPS = 50; 
+        
 
         (SY, PT, YT) = IPendleMarket(_market).readTokens();
 
